@@ -32,7 +32,7 @@
 ### **1\. استنساخ المستودع (Clone the Repository):**
 
 تأكد من استبدال your-username/my-article-app.git بمسار المستودع الفعلي لمشروعك على GitHub.  
-git clone https://github.com/your-username/my-article-app.git  
+git clone https://github.com/Ammar777782439/my-article-app.git  
 cd my-article-app
 
 ### **2\. تشغيل قاعدة البيانات (PostgreSQL) باستخدام Docker Compose:**
