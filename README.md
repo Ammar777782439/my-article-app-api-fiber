@@ -30,8 +30,7 @@
 اتبع هذه الخطوات لتشغيل التطبيق على جهازك المحلي.
 
 ### **1\. استنساخ المستودع (Clone the Repository):**
-
-تأكد من استبدال your-username/my-article-app.git بمسار المستودع الفعلي لمشروعك على GitHub.  
+  
 git clone https://github.com/Ammar777782439/my-article-app.git  
 cd my-article-app
 
