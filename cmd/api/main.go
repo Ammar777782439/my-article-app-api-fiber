@@ -17,24 +17,37 @@ func main() {
 		log.Fatalf("فشل في تهيئة قاعدة البيانات: %v", err)
 	}
 
-	// 2. تهيئة الـ Repository (المستودع)
+	// 2. تهيئة الـ Repositories (المستودعات)
 	articleRepo := repository.NewArticleRepository(db)
+	// تهيئة مستودع المؤلفين
+	authorRepo := repository.NewAuthorRepository(db) // تحتاج لإنشاء هذا الريبو أولاً
 
-	// 3. تهيئة الـ Handler (المعالج)
-	articleHandler := handlers.NewArticleHandler(articleRepo)
+	// 3. تهيئة الـ Handlers (المعالجات)
+	// الآن، NewArticleHandler قد يحتاج إلى AuthorRepository إذا كنت تقوم بالتحقق من وجود المؤلف
+	articleHandler := handlers.NewArticleHandler(articleRepo /*, authorRepo*/) // تمرير AuthorRepo إذا لزم الأمر
+	// تهيئة معالج المؤلفين
+	authorHandler := handlers.NewAuthorHandler(authorRepo) // تحتاج لإنشاء هذا الـ Handler أولاً
 
 	app := fiber.New()
 
 	// 4. تعريف مسارات Fiber (Routes)
-	// مجموعة (Group) للمقالات لتنظيم المسارات
-	api := app.Group("/api/v1") // يمكننا تجميع المسارات تحت بادئة (prefix) معينة
+	api := app.Group("/api/v1") // مجموعة (Group) للـ API
 
+	// مسارات المقالات
 	articlesGroup := api.Group("/articles") // مجموعة خاصة بالمقالات
 	articlesGroup.Post("/", articleHandler.CreateArticle)
 	articlesGroup.Get("/", articleHandler.GetAllArticles)
 	articlesGroup.Get("/:id", articleHandler.GetArticleByID)
 	articlesGroup.Put("/:id", articleHandler.UpdateArticle)
 	articlesGroup.Delete("/:id", articleHandler.DeleteArticle)
+
+	// مسارات المؤلفين (الجديدة)
+	authorsGroup := api.Group("/authors") // مجموعة خاصة بالمؤلفين
+	authorsGroup.Post("/", authorHandler.CreateAuthor)
+	authorsGroup.Get("/", authorHandler.GetAllAuthors)
+	authorsGroup.Get("/:id", authorHandler.GetAuthorByID)
+	authorsGroup.Put("/:id", authorHandler.UpdateAuthor)
+	authorsGroup.Delete("/:id", authorHandler.DeleteAuthor)
 
 	// مسار للتحقق من حالة الخادم (Health Check)
 	app.Get("/health", func(c *fiber.Ctx) error {

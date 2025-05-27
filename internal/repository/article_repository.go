@@ -10,7 +10,7 @@ import (
 
 // ArticleRepository يمثل المستودع الذي يتعامل مع عمليات CRUD للمقالات
 type ArticleRepository struct {
-	db *gorm.DB // لاحظ أن النوع هنا أصبح *gorm.DB بدلاً من *sql.DB
+	db *gorm.DB
 }
 
 // NewArticleRepository ينشئ مثيلاً جديدًا من ArticleRepository
@@ -22,6 +22,7 @@ func NewArticleRepository(db *gorm.DB) *ArticleRepository {
 func (r *ArticleRepository) Create(article *models.Article) error {
 	// GORM: db.Create(&article) سيقوم بإنشاء سجل جديد في جدول articles
 	// وسيتم ملء حقل ID تلقائياً بواسطة GORM بعد الإنشاء.
+	// سيقوم GORM أيضاً بحفظ AuthorID إذا تم توفيره في بنية Article
 	result := r.db.Create(article)
 	if result.Error != nil {
 		return fmt.Errorf("فشل إنشاء المقال: %w", result.Error)
@@ -32,8 +33,8 @@ func (r *ArticleRepository) Create(article *models.Article) error {
 // FindAll يجلب جميع المقالات من قاعدة البيانات
 func (r *ArticleRepository) FindAll() ([]models.Article, error) {
 	var articles []models.Article
-	// GORM: db.Find(&articles) سيقوم بجلب جميع السجلات من جدول articles
-	result := r.db.Find(&articles)
+	// استخدام Preload("Author") لجلب بيانات المؤلف المرتبطة مع كل مقال
+	result := r.db.Preload("Author").Find(&articles)
 	if result.Error != nil {
 		return nil, fmt.Errorf("فشل جلب المقالات: %w", result.Error)
 	}
@@ -43,8 +44,8 @@ func (r *ArticleRepository) FindAll() ([]models.Article, error) {
 // FindByID يجلب مقالًا واحدًا حسب ID
 func (r *ArticleRepository) FindByID(id uint) (*models.Article, error) {
 	var article models.Article
-	// GORM: db.First(&article, id) سيقوم بجلب أول سجل يطابق ID المعطى
-	result := r.db.First(&article, id)
+	// استخدام Preload("Author") لجلب بيانات المؤلف المرتبطة مع المقال
+	result := r.db.Preload("Author").First(&article, id)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound { // GORM له خطأ خاص لعدم وجود السجل
 			return nil, nil // لم يتم العثور على المقال
@@ -63,9 +64,6 @@ func (r *ArticleRepository) Update(article *models.Article) error {
 		return fmt.Errorf("فشل تحديث المقال: %w", result.Error)
 	}
 	if result.RowsAffected == 0 { // للتحقق مما إذا كان السجل موجوداً وتم تحديثه فعلاً
-		// يمكننا أن نفترض هنا أنه إذا لم يتأثر أي صف، فالمقال غير موجود.
-		// أو يمكننا جلب المقال أولاً للتأكد.
-		// من أجل البساطة هنا، نعتبر أنه لم يتم العثور عليه إذا لم يتأثر أي صف.
 		return gorm.ErrRecordNotFound
 	}
 	return nil

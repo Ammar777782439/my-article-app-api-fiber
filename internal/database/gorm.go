@@ -22,7 +22,7 @@ func InitGORMDB() (*gorm.DB, error) {
 	// ترحيل (Migrate) مخطط قاعدة البيانات لإنشاء/تحديث جدول Articles
 	// AutoMigrate سيقوم بإنشاء الجدول بناءً على بنية Article إذا لم يكن موجودًا.
 	// وسيقوم بتحديث الأعمدة إذا أضفت حقولًا جديدة.
-	err = db.AutoMigrate(&models.Article{})
+	err = db.AutoMigrate(&models.Article{},&models.Author{})
 	if err != nil {
 		return nil, fmt.Errorf("فشل ترحيل قاعدة البيانات لجدول Articles: %w", err)
 	}
