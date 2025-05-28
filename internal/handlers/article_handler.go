@@ -55,7 +55,7 @@ func (h *ArticleHandler) CreateArticle(c *fiber.Ctx) error {
 
 // GetAllArticles يتعامل مع طلبات GET لجلب جميع المقالات
 func (h *ArticleHandler) GetAllArticles(c *fiber.Ctx) error {
-	articles, err := h.articleUseCase.GetAllArticles() // <-- تغيير هنا
+	articles, err := h.articleUseCase.GetAllArticles() 
 	if err != nil {
 		log.Printf("خطأ في جلب المقالات: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "فشل جلب المقالات."})

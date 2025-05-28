@@ -27,12 +27,12 @@ func main() {
 	authorUseCase := usecase.NewAuthorUseCase(authorRepo)
 
 	// 4. تهيئة الـ Handlers (المعالجات) - استخدام Use Cases
-	articleHandler := handlers.NewArticleHandler(articleUseCase) // <-- تغيير هنا
-	authorHandler := handlers.NewAuthorHandler(authorUseCase)     // <-- تغيير هنا
+	articleHandler := handlers.NewArticleHandler(articleUseCase) 
+	authorHandler := handlers.NewAuthorHandler(authorUseCase)     
 
 	app := fiber.New()
 
-	// 5. تعريف مسارات Fiber (Routes) - لا تغيير هنا
+	// 5. تعريف مسارات Fiber (Routes) 
 	api := app.Group("/api/v1")
 
 	articlesGroup := api.Group("/articles")
