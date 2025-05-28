@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"my-article-app/internal/models"
-	"my-article-app/internal/repository"
+	"my-article-app/internal/usecase" // استيراد UseCase
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
@@ -13,19 +13,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// validator هنا هو نفسه الذي تم تعريفه في article_handler.go
-// من الأفضل عادةً تعريف validator مرة واحدة في مكان مركزي إذا كان سيستخدم في عدة handlers.
-// للحفاظ على البساطة هنا، نتركه كما هو.
-// var validate = validator.New() // إذا كان بالفعل معرفًا في ملف آخر بنفس الحزمة، لا تعيد تعريفه
-
 // AuthorHandler يمثل معالجات HTTP للمؤلفين
 type AuthorHandler struct {
-	authorRepo *repository.AuthorRepository
+	authorUseCase *usecase.AuthorUseCase // <-- تغيير هنا
 }
 
 // NewAuthorHandler ينشئ مثيلاً جديدًا من AuthorHandler
-func NewAuthorHandler(authorRepo *repository.AuthorRepository) *AuthorHandler {
-	return &AuthorHandler{authorRepo: authorRepo}
+func NewAuthorHandler(authorUseCase *usecase.AuthorUseCase) *AuthorHandler { // <-- تغيير هنا
+	return &AuthorHandler{authorUseCase: authorUseCase} // <-- تغيير هنا
 }
 
 // CreateAuthor يتعامل مع طلبات POST لإنشاء مؤلف جديد
@@ -44,8 +39,8 @@ func (h *AuthorHandler) CreateAuthor(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := h.authorRepo.Create(author); err != nil {
-		log.Printf("خطأ في إنشاء المؤلف في قاعدة البيانات: %v", err)
+	if err := h.authorUseCase.CreateAuthor(author); err != nil { // <-- تغيير هنا
+		log.Printf("خطأ في إنشاء المؤلف: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "فشل إنشاء المؤلف."})
 	}
 
@@ -57,9 +52,9 @@ func (h *AuthorHandler) CreateAuthor(c *fiber.Ctx) error {
 
 // GetAllAuthors يتعامل مع طلبات GET لجلب جميع المؤلفين
 func (h *AuthorHandler) GetAllAuthors(c *fiber.Ctx) error {
-	authors, err := h.authorRepo.FindAll()
+	authors, err := h.authorUseCase.GetAllAuthors() // <-- تغيير هنا
 	if err != nil {
-		log.Printf("خطأ في جلب المؤلفين من قاعدة البيانات: %v", err)
+		log.Printf("خطأ في جلب المؤلفين: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "فشل جلب المؤلفين."})
 	}
 	return c.JSON(authors)
@@ -73,9 +68,9 @@ func (h *AuthorHandler) GetAuthorByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "معرف المؤلف غير صالح."})
 	}
 
-	author, err := h.authorRepo.FindByID(uint(id))
+	author, err := h.authorUseCase.GetAuthorByID(uint(id)) // <-- تغيير هنا
 	if err != nil {
-		log.Printf("خطأ في جلب المؤلف من قاعدة البيانات: %v", err)
+		log.Printf("خطأ في جلب المؤلف: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "فشل جلب المؤلف."})
 	}
 	if author == nil {
@@ -107,13 +102,13 @@ func (h *AuthorHandler) UpdateAuthor(c *fiber.Ctx) error {
 		})
 	}
 
-	author.ID = uint(id) // تعيين الـ ID للمؤلف الذي سيتم تحديثه
+	author.ID = uint(id)
 
-	if err := h.authorRepo.Update(author); err != nil {
+	if err := h.authorUseCase.UpdateAuthor(author); err != nil { // <-- تغيير هنا
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": fmt.Sprintf("المؤلف بالمعرف %d غير موجود.", id)})
 		}
-		log.Printf("خطأ في تحديث المؤلف في قاعدة البيانات: %v", err)
+		log.Printf("خطأ في تحديث المؤلف: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "فشل تحديث المؤلف."})
 	}
 
@@ -131,11 +126,11 @@ func (h *AuthorHandler) DeleteAuthor(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "معرف المؤلف غير صالح."})
 	}
 
-	if err := h.authorRepo.Delete(uint(id)); err != nil {
+	if err := h.authorUseCase.DeleteAuthor(uint(id)); err != nil { // <-- تغيير هنا
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": fmt.Sprintf("المؤلف بالمعرف %d غير موجود.", id)})
 		}
-		log.Printf("خطأ في حذف المؤلف من قاعدة البيانات: %v", err)
+		log.Printf("خطأ في حذف المؤلف: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "فشل حذف المؤلف."})
 	}
 
