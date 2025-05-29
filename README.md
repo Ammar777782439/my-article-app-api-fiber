@@ -41,9 +41,6 @@
 
 ## 🏛️ Project Structure
 
-
-
-
 my-article-app/
 ├── cmd/api/              # Main entry point for the application
 │   └── main.go
@@ -67,6 +64,7 @@ my-article-app/
 ├── go.sum
 ├── README.md
 └── docker-compose.yml
+
 
 
 **Request Flow:**
