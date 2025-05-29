@@ -41,29 +41,16 @@
 
 ## 🏛️ Project Structure
 
-my-article-app/
-├── cmd/api/              # Main entry point for the application
-│   └── main.go
-├── internal/
-│   ├── database/         # Database connection setup
-│   │   └── gorm.go
-│   ├── handlers/         # HTTP request handlers
-│   │   ├── article_handler.go
-│   │   └── author_handler.go
-│   ├── models/           # Data structure definitions
-│   │   ├── article.go
-│   │   └── author.go
-│   ├── repository/       # Data access layer
-│   │   ├── article_repository.go
-│   │   └── author_repository.go
-│   └── usecase/          # Business logic layer
-│       ├── article_usecase.go
-│       └── author_usecase.go
-├── .gitignore
-├── go.mod
-├── go.sum
-├── README.md
-└── docker-compose.yml
+
+ * my-article-app/ (Root directory of your project)
+   * main.go (Main application entry point)
+   * article.go (Article model and related logic - e.g., handlers, repository)
+   * author.go (Author model and related logic)
+   * database.go (Database connection and setup)
+   * go.mod (Manages project dependencies)
+   * go.sum (Checksums of dependencies)
+   * README.md (Project description and setup instructions)
+   * docker-compose.yml (Optional: for Docker setup)
 
 
 
