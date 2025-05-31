@@ -1,0 +1,34 @@
+bin\windows\kafka-storage.bat format --config config\kraft\server.properties --cluster-id 13xFi2oNRv6tzynwcSkS9g
+
+bin/kafka-storage.sh format -t BBs_60DCQhSh6_ojH6nGkg-c config/kraft/server.properties
+--------------------
+تحويل الاتصالات من ip الوندوز الي الابنتو 
+ netsh interface portproxy add v4tov4 listenaddress=192.168.8.21 listenport=9092 connectaddress=127.0.1.1 connectport=9092
+
+bin/kafka-server-start.sh config/kraft/server.properties
+
+
+ ~/kafka_2.13-3.0.0/bin/kafka-storage.sh random-uuid
+
+
+تشغيل الكونكت لجلب البيانات من قاعده البيانات 
+bin/connect-standalone.sh config/connect-standalone.properties config/postgres-source-connector.properties
+
+
+هذا الأمر لمعرفة العمليات اللي تستخدم البورت
+
+netstat -tulnp | grep 9093
+
+قتل العمليه 
+
+kill -9 PID
+
+
+التحقق من وجود الـ Topic:
+
+~/kafka_2.13-3.0.0/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+
+التحقق من تفاصيل الـ Topic
+
+~/kafka_2.13-3.0.0/bin/kafka-topics.sh --describe --topic ammar --bootstrap-server localhost:9092

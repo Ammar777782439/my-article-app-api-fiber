@@ -1,0 +1,82 @@
+
+تشغيل السيرفر 
+
+bin/kafka-server-start.sh config/kraft/server.properties
+_________________________________________________________________________________________________
+produser
+
+bin/kafka-console-producer.sh --topic input-topic --bootstrap-server localhost:9092
+
+___________________________________________________________________________________________
+consumer
+bin/kafka-console-consumer.sh --topic output-topic --bootstrap-server localhost:9092 --from-beginning
+
+____________________________________________________________________________________________
+
+crete topic 
+
+bin/kafka-topics.sh --create --bootstrap-server input-topic --replication-factor 1 --partitions 1 --topic test-topic
+
+________________________________________________________________________________________________
+
+تشغيل الاسكيما 
+./confluent-7.5.0/bin/schema-registry-start ./schema-registry.properties
+
+__________________________________________________________________________________________________
+
+عرض تفاصيل التوبك 
+kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic first_topic
+______________________________________________________________________________________________________
+
+عرض التوبكات اذ فعلنا صلاحيه ال SASAL
+bin/kafka-topics.sh --list --bootstrap-server localhost:9194 --command-config config/client-sasl.properties
+
+______________________________________________________________________________________________________
+
+انشائ التوبكات اذ SASAL
+
+bin/kafka-topics.sh --create --topic test-sasl-topic --bootstrap-server localhost:9194 --command-config config/client-sasl.properties --partitions 1 --replication-factor 1
+
+____________________________________
+
+echo kafkasslpass > ./ssl/server/kafka_ssl_key_credentials
+echo kafkasslpass  > ./ssl/server/kafka_ssl_truststore_credentials
+echo kafkasslpass > ./ssl/server/kafka_ssl_keystore_credentials
+echo kafkasslpass  > ./ssl/server/kafka_ssl_truststore_credentials
+________________________________________________
+
+docker logs --tail 20 kafka1
+docker logs --tail 50 kafka1docker logs kafka1 | findstr /i "error warn"
+
+__________________________________________
+protoc --go_out=. --go_opt=paths=source_relative .\proto\message.proto
+
+
+____________________________________________________________________________
+# تشغيل Kafka باستخدام ملف التكوين server-1.properties
+./scripts/start-kafka.sh 1
+
+# عرض قائمة المواضيع عبر SSL
+./scripts/manage-topics.sh list-ssl
+
+# إنشاء موضوع جديد
+./scripts/manage-topics.sh create my-topic 3 3
+____________________________________________________________________________
+
+ ss -ltn | grep -E '909[0-9]|909[0-9][0-9]'
+___________________________________________________________________________
+
+شغل Kafdrop باستخدام Java، مع تمرير المتغيرات اللازمة
+java \
+  -Djavax.net.ssl.trustStore=/home/ammar/kafka_2.13-4.0.0/config/kraft/ssl/client/kafka.client.truststore.jks \
+  -Djavax.net.ssl.trustStorePassword=kafkasslpass \
+  -Djavax.net.ssl.keyStore=/home/ammar/kafka_2.13-4.0.0/config/kraft/ssl/client/kafka.client.keystore.jks \
+  -Djavax.net.ssl.keyStorePassword=kafkasslpass \
+  -Dserver.servlet.context-path=/ \
+  -Dkafka.brokerConnect=172.23.38.230:9092,172.23.38.230:9095,172.23.38.230:9097 \
+  -Dkafka.propertiesFile=/home/ammar/kafka_2.13-4.0.0/config/kraft/client-ssl.properties \
+  -jar kafdrop.jar
+__________________________________________________________________
+
+
+./bin/kafka-broker-api-versions.sh --bootstrap-server 172.23.38.230:9092 --command-config ./config/kraft/client-ssl.properties
