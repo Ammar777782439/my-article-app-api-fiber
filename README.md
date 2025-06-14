@@ -1,204 +1,95 @@
-# my-article-app: Article and Author Management System (Go, Fiber, GORM)
+# **my-article-app: نظام إدارة المقالات والمؤلفين (Go, Fiber, GORM)**
 
-`my-article-app` is an integrated web application built with Go that provides a RESTful API for managing articles and authors. The application is built using the Fiber framework and the GORM library for interacting with PostgreSQL, following a clean and scalable architecture.
+my-article-app هو تطبيق ويب متكامل مبني بلغة Go، يوفر واجهة برمجة تطبيقات RESTful لإدارة المقالات والمؤلفين. تم بناء التطبيق باستخدام إطار العمل Fiber ومكتبة GORM للتفاعل مع قاعدة بيانات PostgreSQL، مع اتباع هيكلية نظيفة وقابلة للتطوير تركز على فصل الاهتمامات.
 
----
+## **✨ الميزات الرئيسية**
 
-## ✨ Key Features
+* **إدارة شاملة للمقالات:** إنشاء، قراءة، تحديث، وحذف المقالات.  
+* **إدارة شاملة للمؤلفين:** إنشاء، قراءة، تحديث، وحذف المؤلفين.  
+* **هيكلية تطبيق نظيفة (Clean Architecture):**  
+  * **طبقة المعالجات (Handlers):** مسؤولة عن طلبات واستجابات HTTP.  
+  * **طبقة كائنات نقل البيانات (DTOs):** تفصل بين نماذج قاعدة البيانات والواجهة الخارجية للـ API.  
+  * **طبقة حالات الاستخدام (Use Cases):** تحتوي على منطق العمل (Business Logic).  
+  * **طبقة المستودعات (Repositories):** مسؤولة عن التفاعل المباشر مع قاعدة البيانات.  
+* **علاقات فعالة بين البيانات:** استخدام استراتيجية التحميل المسبق (Preloading) لجلب البيانات المرتبطة (مثل مقالات المؤلف) بكفاءة في استعلام واحد، مما يمنع مشاكل الأداء الشائعة مثل (N+1).  
+* **التحقق من صحة البيانات:** استخدام مكتبة go-playground/validator لضمان سلامة البيانات المدخلة.  
+* **سهولة الإعداد والتشغيل:** استخدام Docker و Docker Compose لتشغيل قاعدة بيانات PostgreSQL بسهولة.
 
-- **Comprehensive Article Management:**
-  - Create new articles and link them to an author.
-  - Read all articles or a specific article (including author data).
-  - Update article data.
-  - Delete articles.
-- **Comprehensive Author Management:**
-  - Create new authors.
-  - Read all authors or a specific author (including their list of articles).
-  - Update author data.
-  - Delete authors (considering associated articles).
-- **Strong Data Relationships:**
-  - One-to-many relationship between authors and articles.
-  - Preloading of related data for improved performance.
-- **Data Validation:**
-  - Use of the `go-playground/validator` library to ensure the integrity of input data.
-- **Clean Application Architecture:**
-  - Handlers, Use Cases, Repositories, Models.
-- **Easy Setup and Operation:**
-  - Use of Docker and Docker Compose to easily run a PostgreSQL database.
+## **🏛️ هيكلية المشروع**
 
----
+يتبع المشروع هيكلية متعددة الطبقات لفصل الاهتمامات وجعل الكود أكثر تنظيمًا وقابلية للصيانة.
 
-## 🛠️ Technologies Used
+my-article-app/  
+├── cmd/api/main.go              \# نقطة الدخول الرئيسية للتطبيق  
+├── internal/  
+│   ├── database/                \# إعداد اتصال قاعدة البيانات  
+│   ├── dto/                     \# (DTOs) كائنات نقل البيانات للـ API  
+│   ├── handlers/                \# معالجات طلبات HTTP (تتعامل مع DTOs)  
+│   ├── models/                  \# نماذج GORM (تمثل جداول قاعدة البيانات)  
+│   ├── repository/              \# طبقة الوصول إلى البيانات (تتعامل مع Models)  
+│   └── usecase/                 \# طبقة منطق العمل (الجسر بين DTOs و Models)  
+├── go.mod  
+├── go.sum  
+└── docker-compose.yml
 
-- **Programming Language:** Go (Golang) 1.18+
-- **Web Framework:** Fiber v2
-- **ORM:** GORM
-- **Database:** PostgreSQL
-- **Data Validation:** `go-playground/validator` v10
-- **Containers:** Docker & Docker Compose
+**رحلة تدفق الطلب (Request Flow):**
 
----
+1. يصل طلب HTTP إلى خادم Fiber.  
+2. يقوم Fiber بتوجيه الطلب إلى **المعالج (Handler)** المناسب.  
+3. يقوم المعالج بتحليل الطلب إلى **Request DTO** ويتحقق من صحته.  
+4. يستدعي المعالج **حالة الاستخدام (UseCase)** المناسبة ويمرر لها الـ DTO.  
+5. تقوم حالة الاستخدام بتطبيق منطق العمل، وتحويل الـ DTO إلى **نموذج (Model)**.  
+6. تستدعي حالة الاستخدام **المستودع (Repository)** لتنفيذ عمليات قاعدة البيانات على الـ Model.  
+7. يقوم المستودع بتنفيذ الاستعلام باستخدام GORM.  
+8. تعود النتائج عبر الطبقات: يحول الـ UseCase الـ Model الناتج إلى **Response DTO**.  
+9. يستلم الـ Handler الـ Response DTO ويرسله كاستجابة JSON للمستخدم.
 
-## 🏛️ Project Structure
+## **🛠️ التقنيات المستخدمة**
 
+* **لغة البرمجة:** Go (Golang) 1.18+  
+* **إطار العمل:** Fiber v2  
+* **ORM:** GORM  
+* **قاعدة البيانات:** PostgreSQL  
+* **التحقق من صحة البيانات:** go-playground/validator v10  
+* **الحاويات:** Docker & Docker Compose
 
- * my-article-app/ (Root directory of your project)
-   * main.go (Main application entry point)
-   * article.go (Article model and related logic - e.g., handlers, repository)
-   * author.go (Author model and related logic)
-   * database.go (Database connection and setup)
-   * go.mod (Manages project dependencies)
-   * go.sum (Checksums of dependencies)
-   * README.md (Project description and setup instructions)
-   * docker-compose.yml (Optional: for Docker setup)
+## **🚀 المتطلبات والإعداد**
 
+### **المتطلبات:**
 
+* **Go:** الإصدار 1.18 أو أحدث.  
+* **Docker** و **Docker Compose:** لتشغيل قاعدة بيانات PostgreSQL.  
+* **Git:** لاستنساخ المستودع.
 
-**Request Flow:**
-1. An HTTP request arrives at the Fiber server.
-2. Fiber routes the request to the appropriate Handler.
-3. The Handler parses the request and validates the input.
-4. The Handler calls the appropriate UseCase.
-5. The UseCase coordinates operations with the Repository.
-6. The Repository executes database operations using GORM.
-7. Results are returned through the layers to the Handler, which sends the response to the client.
+### **خطوات الإعداد:**
 
----
+1. **استنساخ المستودع:**  
+   git clone \<رابط-المستودع\>  
+   cd my-article-app
 
-## 🚀 Prerequisites and Setup
+2. **إعداد قاعدة البيانات (باستخدام Docker Compose):**  
+   * يوجد ملف docker-compose.yml معد مسبقًا.  
+   * لتشغيل قاعدة البيانات:
 
-### Prerequisites:
-- **Go:** Version 1.18 or later
-- **Docker and Docker Compose:** To run the PostgreSQL database (optional)
-- **Git:** To clone the repository
+docker-compose up \-d
 
-### Setup Steps:
+* **ملاحظة:** تأكد من تطابق إعدادات الاتصال في internal/database/gorm.go (متغير dsn) مع إعدادات Docker أو PostgreSQL المحلية.  
+3. **تثبيت التبعيات:**  
+   go mod tidy
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-link>
-    cd my-article-app
-    ```
-2.  **Set up the database (using Docker Compose):**
-    - A pre-configured `docker-compose.yml` file is provided:
-    ```yaml
-    version: '3.8'
-    services:
-      postgres_db:
-        image: postgres:13-alpine
-        container_name: my_article_app_db
-        environment:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: article_db
-        ports:
-          - "5432:5432"
-        volumes:
-          - postgres_data:/var/lib/postgresql/data
-    volumes:
-      postgres_data:
-    ```
-    - To run the database:
-    ```bash
-    docker-compose up -d
-    ```
-    - **Note:** Ensure that the connection settings in `internal/database/gorm.go` (the `dsn` variable) match your Docker or local PostgreSQL settings.
+4. **تشغيل التطبيق:**  
+   go run ./cmd/api/main.go
 
-3.  **Install dependencies:**
-    ```bash
-    go mod tidy
-    ```
-4.  **Run the application:**
-    ```bash
-    go run ./cmd/api/main.go
-    ```
-    A message will appear indicating that the server is running on port `3000`.
+   ستظهر رسالة تفيد بأن الخادم يعمل على المنفذ 3000\.
 
----
+## **📡 واجهات برمجة التطبيقات (API Endpoints)**
 
-## 📡 API Endpoints
+تستخدم الواجهات الآن DTOs للطلبات والاستجابات لضمان الأمان والوضوح.
 
-### Authors
+### **المؤلفون (Authors)**
 
-| Method | Path              | Description            | Request Body (Example)                               | Successful Response (Example) |
-|--------|-------------------|------------------------|------------------------------------------------------|-----------------------------|
-| POST   | /authors          | Create a new author    | `{ "name": "Author Name", "email": "email@example.com" }` | 201 Created                 |
-| GET    | /authors          | Fetch all authors      | (None)                                               | 200 OK                      |
-| GET    | /authors/{id}     | Fetch a specific author| (None)                                               | 200 OK                      |
-| PUT    | /authors/{id}     | Update author data     | `{ "name": "New Name", "email": "email@domain.com" }`  | 200 OK                      |
-| DELETE | /authors/{id}     | Delete an author       | (None)                                               | 204 No Content              |
-
-### Articles
-
-| Method | Path              | Description            | Request Body (Example)                                   | Successful Response (Example) |
-|--------|-------------------|------------------------|----------------------------------------------------------|-----------------------------|
-| POST   | /articles         | Create a new article   | `{ "title": "Title", "content": "...", "author_id": 1 }` | 201 Created                 |
-| GET    | /articles         | Fetch all articles     | (None)                                                 | 200 OK                      |
-| GET    | /articles/{id}    | Fetch a specific article| (None)                                                 | 200 OK                      |
-| PUT    | /articles/{id}    | Update article data    | `{ "title": "New Title", "content": "...", "author_id": 1 }` | 200 OK                      |
-| DELETE | /articles/{id}    | Delete an article      | (None)                                                 | 204 No Content              |
-
-### Health Check
-
-| Method | Path    | Description                |
-|--------|---------|----------------------------|
-| GET    | /health | Check if the application is running |
-
----
-
-## 🧪 `curl` Examples for Testing Endpoints
-
-1.  **Create a new author:**
-    ```bash
-    curl -X POST -H "Content-Type: application/json" \
-         -d '{"name": "Author Name", "email": "email@example.com"}' \
-         http://localhost:3000/api/v1/authors
-    ```
-
-2.  **Create a new article (with author_id):**
-    ```bash
-    curl -X POST -H "Content-Type: application/json" \
-         -d '{"title": "Article Title", "content": "Content...", "author_id": 1}' \
-         http://localhost:3000/api/v1/articles
-    ```
-
-3.  **Fetch all articles:**
-    ```bash
-    curl http://localhost:3000/api/v1/articles
-    ```
-
-4.  **Fetch a specific article:**
-    ```bash
-    curl http://localhost:3000/api/v1/articles/1
-    ```
-
----
-
-## 💡 Suggested Future Improvements and Developments
-
-- **Authentication and Authorization:** Add JWT or similar to protect endpoints.
-- **Pagination, Sorting, and Filtering:** Support for these features.
-- **Testing:** Write unit and integration tests.
-- **Logging and Monitoring:** Integrate logrus/zap and Prometheus/Grafana.
-- **Interactive API Documentation:** Use Swagger/OpenAPI (Swaggo).
-- **Improved Error Handling:** Provide standard error codes and descriptions.
-- **Use Environment Variables:** To manage sensitive configurations.
-
----
-
-
-## 🤝 Contributing
-
-1.  Fork the Project.
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the Branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-
+| الطريقة | المسار | الوصف | جسم الطلب (مثال) | الاستجابة الناجحة (مثال) |  
+| POST | /api/v1/authors | إنشاء مؤلف جديد | {"name": "أحمد", "email": "a@a.com"} | 201 Created مع AuthorResponse |  
+| GET | /api/v1/authors | جلب جميع المؤلفين | (لا يوجد) | 200 OK مع \[\]AuthorResponse |  
+| GET | /api/v1/authors/{id} | جلب مؤلف محدد | (لا يوجد) | 200 OK مع AuthorDetailResponse |  
+| PUT | /api/v1/authors/{id} | تحديث بيانات مؤلف | \`{"name": "أحمد الجديد | |

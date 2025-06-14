@@ -57,7 +57,7 @@ func (r *articleRepository) FindAll() ([]models.Article, error) {
 		// إرجاع الخطأ مع رسالة توضيحية
 		return nil, fmt.Errorf("فشل جلب المقالات: %w", result.Error)
 	}
-	return articles, nil
+	 return nil, result.Error
 }
 
 // FindByID يجلب مقالًا واحدًا حسب ID
@@ -72,7 +72,7 @@ func (r *articleRepository) FindByID(id uint) (*models.Article, error) {
 		// إذا كان الخطأ هو عدم وجود المقال
 		if result.Error == gorm.ErrRecordNotFound {
 			// إرجاع رسالة خطأ مخصصة
-			return nil, nil // لم يتم العثور على المقال
+			 return nil, result.Error
 		}
 		// إرجاع الخطأ مع رسالة توضيحية
 		return nil, fmt.Errorf("فشل جلب المقال بالمعرف %d: %w", id, result.Error)
