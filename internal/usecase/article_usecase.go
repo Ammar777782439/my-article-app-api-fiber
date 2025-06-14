@@ -8,6 +8,7 @@ import (
 	"my-article-app/internal/repository"
 )
 
+// ArticleUseCase interface remains the same
 type ArticleUseCase interface {
 	CreateArticle(req *dto.CreateArticleRequest) (*dto.ArticleResponse, error)
 	GetAllArticles() ([]dto.ArticleResponse, error)
@@ -18,10 +19,9 @@ type ArticleUseCase interface {
 
 type articleUseCase struct {
 	articleRepo repository.ArticleRepository
-	authorRepo  repository.AuthorRepository // <-- إضافة مستودع المؤلف للتحقق
+	authorRepo  repository.AuthorRepository
 }
 
-// NewArticleUseCase ينشئ مثيلاً جديدًا (يجب تحديثه في main.go)
 func NewArticleUseCase(articleRepo repository.ArticleRepository, authorRepo repository.AuthorRepository) ArticleUseCase {
 	return &articleUseCase{
 		articleRepo: articleRepo,
@@ -29,9 +29,28 @@ func NewArticleUseCase(articleRepo repository.ArticleRepository, authorRepo repo
 	}
 }
 
-// CreateArticle ينشئ مقالًا جديدًا
+// 1. دالة التحويل التي اخترتها (تستقبل المقال والمؤلف بشكل منفصل)
+func mapArticleToResponse(article *models.Article, author *models.Author) *dto.ArticleResponse {
+	if article == nil || author == nil {
+		return nil
+	}
+	return &dto.ArticleResponse{
+		ID:        article.ID,
+		Title:     article.Title,
+		Content:   article.Content,
+		CreatedAt: article.CreatedAt,
+		UpdatedAt: article.UpdatedAt,
+		Author: dto.AuthorResponse{ // استخدم بيانات المؤلف التي تم تمريرها مباشرة
+			ID:    author.ID,
+			Name:  author.Name,
+			Email: author.Email,
+		},
+	}
+}
+
+// CreateArticle (الحالة الخاصة التي تتطلب جلب المؤلف بشكل منفصل)
 func (uc *articleUseCase) CreateArticle(req *dto.CreateArticleRequest) (*dto.ArticleResponse, error) {
-	// التحقق من وجود المؤلف أولاً
+	// نجلب المؤلف بشكل صريح للتحقق منه
 	author, err := uc.authorRepo.FindByID(req.AuthorID)
 	if err != nil || author == nil {
 		return nil, errors.New("المؤلف بالمعرف المحدد غير موجود")
@@ -46,43 +65,50 @@ func (uc *articleUseCase) CreateArticle(req *dto.CreateArticleRequest) (*dto.Art
 	if err := uc.articleRepo.Create(article); err != nil {
 		return nil, err
 	}
-	
-	// GORM لا يقوم بتحميل المؤلف تلقائيًا بعد الإنشاء، لذلك نقوم بتعبئته يدويًا
-	article.Author = *author
 
-	return uc.mapArticleToResponse(article), nil
+	// نمرر المقال الجديد والمؤلف الذي جلبناه إلى دالة التحويل
+	return mapArticleToResponse(article, author), nil
 }
 
-// GetAllArticles يجلب جميع المقالات
+// GetAllArticles (الحالة العادية)
 func (uc *articleUseCase) GetAllArticles() ([]dto.ArticleResponse, error) {
+	// Repository's FindAll already preloads the author into each article
 	articles, err := uc.articleRepo.FindAll()
 	if err != nil {
 		return nil, err
 	}
 
 	var responses []dto.ArticleResponse
-	for _, article := range articles {
-		responses = append(responses, *uc.mapArticleToResponse(&article))
+	for _,article := range articles{
+
+
+		currentArticle :=article
+		responses =append(responses, *mapArticleToResponse(&currentArticle,&currentArticle.Author))
 	}
-	return responses, nil
+	return responses ,nil
 }
 
-// GetArticleByID يجلب مقالًا واحدًا
+// GetArticleByID (الحالة العادية)
 func (uc *articleUseCase) GetArticleByID(id uint) (*dto.ArticleResponse, error) {
+	// Repository's FindByID already preloads the author
 	article, err := uc.articleRepo.FindByID(id)
 	if err != nil || article == nil {
 		return nil, err
 	}
-	return uc.mapArticleToResponse(article), nil
+
+	// نمرر المقال والمؤلف المدمج بداخله (&article.Author) إلى دالة التحويل
+	return mapArticleToResponse(article, &article.Author), nil
 }
 
-// UpdateArticle يحدّث مقالًا
+// UpdateArticle (الحالة العادية)
 func (uc *articleUseCase) UpdateArticle(id uint, req *dto.UpdateArticleRequest) (*dto.ArticleResponse, error) {
+	// Repository's FindByID already preloads the author
 	article, err := uc.articleRepo.FindByID(id)
 	if err != nil || article == nil {
 		return nil, err
 	}
 
+	// تحديث الحقول
 	if req.Title != "" {
 		article.Title = req.Title
 	}
@@ -93,26 +119,12 @@ func (uc *articleUseCase) UpdateArticle(id uint, req *dto.UpdateArticleRequest) 
 	if err := uc.articleRepo.Update(article); err != nil {
 		return nil, err
 	}
-	return uc.mapArticleToResponse(article), nil
+	
+	// نمرر المقال المحدّث والمؤلف المدمج بداخله (&article.Author) إلى دالة التحويل
+	return mapArticleToResponse(article, &article.Author), nil
 }
 
-// DeleteArticle يحذف مقالًا
+// DeleteArticle remains the same
 func (uc *articleUseCase) DeleteArticle(id uint) error {
 	return uc.articleRepo.Delete(id)
-}
-
-// دالة مساعدة للتحويل لتقليل التكرار
-func (uc *articleUseCase) mapArticleToResponse(article *models.Article) *dto.ArticleResponse {
-	return &dto.ArticleResponse{
-		ID:        article.ID,
-		Title:     article.Title,
-		Content:   article.Content,
-		CreatedAt: article.CreatedAt,
-		UpdatedAt: article.UpdatedAt,
-		Author: dto.AuthorResponse{
-			ID:    article.Author.ID,
-			Name:  article.Author.Name,
-			Email: article.Author.Email,
-		},
-	}
 }
