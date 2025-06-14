@@ -22,8 +22,8 @@ func main() {
 	articleRepo := repository.NewArticleRepository(db)
 	authorRepo := repository.NewAuthorRepository(db)
 	// 3. تهيئة الـ Use Cases (حالات الاستخدام)
-	articleUseCase := usecase.NewArticleUseCase(articleRepo)
-
+	// <-- التعديل هنا: تمرير authorRepo إلى ArticleUseCase
+	articleUseCase := usecase.NewArticleUseCase(articleRepo, authorRepo) 
 	authorUseCase := usecase.NewAuthorUseCase(authorRepo)
 
 	// 4. تهيئة الـ Handlers (المعالجات) - استخدام Use Cases

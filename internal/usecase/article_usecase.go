@@ -1,98 +1,118 @@
 // my-article-app/internal/usecase/article_usecase.go
 package usecase
 
-// استيراد المكتبات اللازمة للعمل
 import (
-	"my-article-app/internal/models"     // استيراد نماذج البيانات (مثل Article)
-	"my-article-app/internal/repository" // استيراد طبقة المستودع (Repository)
+	"errors"
+	"my-article-app/internal/dto"
+	"my-article-app/internal/models"
+	"my-article-app/internal/repository"
 )
+
 type ArticleUseCase interface {
-	CreateArticle(article *models.Article) error
-	GetAllArticles() ([]models.Article, error)
-	GetArticleByID(id uint) (*models.Article, error)
-	UpdateArticle(article *models.Article) error
+	CreateArticle(req *dto.CreateArticleRequest) (*dto.ArticleResponse, error)
+	GetAllArticles() ([]dto.ArticleResponse, error)
+	GetArticleByID(id uint) (*dto.ArticleResponse, error)
+	UpdateArticle(id uint, req *dto.UpdateArticleRequest) (*dto.ArticleResponse, error)
 	DeleteArticle(id uint) error
 }
-// ArticleUseCase يمثل منطق العمل للمقالات (هذا هو الطابق الثاني الذي يحتوي على قواعد العمل)
 
 type articleUseCase struct {
-	articleRepo repository.ArticleRepository // مرجع لمستودع المقالات (الطابق الثالث)
-	// يمكنك إضافة AuthorRepository هنا إذا احتجت للتحقق من المؤلف
-	// authorRepo  *repository.AuthorRepository
+	articleRepo repository.ArticleRepository
+	authorRepo  repository.AuthorRepository // <-- إضافة مستودع المؤلف للتحقق
 }
 
-// NewArticleUseCase ينشئ مثيلاً جديدًا من ArticleUseCase
-
-func NewArticleUseCase(articleRepo repository.ArticleRepository) ArticleUseCase {
-	// إنشاء وإرجاع كائن منطق العمل مع تمرير مرجع لمستودع المقالات
-	return &articleUseCase{articleRepo: articleRepo }
+// NewArticleUseCase ينشئ مثيلاً جديدًا (يجب تحديثه في main.go)
+func NewArticleUseCase(articleRepo repository.ArticleRepository, authorRepo repository.AuthorRepository) ArticleUseCase {
+	return &articleUseCase{
+		articleRepo: articleRepo,
+		authorRepo:  authorRepo,
+	}
 }
 
-// CreateArticle يقوم بإنشاء مقال جديد (هنا يمكن إضافة منطق عمل إضافي)
-// تستقبل هذه الدالة بيانات المقال من طبقة المعالج (Handler) وتقوم بمعالجتها
-func (uc *articleUseCase) CreateArticle(article *models.Article) error {
-	//  يمكن إضافة أي منطق عمل قبل الحفظ
-	// مثال: التحقق من وجود المؤلف (إذا تم تمرير authorRepo)
-	// author, err := uc.authorRepo.FindByID(article.AuthorID)
-	// if err != nil || author == nil {
-	// 	return errors.New("المؤلف غير موجود")
-	// }
+// CreateArticle ينشئ مقالًا جديدًا
+func (uc *articleUseCase) CreateArticle(req *dto.CreateArticleRequest) (*dto.ArticleResponse, error) {
+	// التحقق من وجود المؤلف أولاً
+	author, err := uc.authorRepo.FindByID(req.AuthorID)
+	if err != nil || author == nil {
+		return nil, errors.New("المؤلف بالمعرف المحدد غير موجود")
+	}
 
-	//  يمكن إضافة قواعد عمل أخرى مثل:
-	// - التحقق من أن المقال ليس مكرراً
-	// - إضافة تاريخ النشر تلقائياً
-	// - تنسيق محتوى المقال
+	article := &models.Article{
+		Title:    req.Title,
+		Content:  req.Content,
+		AuthorID: req.AuthorID,
+	}
 
-	// بعد التحقق من كل قواعد العمل، نطلب من طبقة المستودع (الطابق الثالث) حفظ المقال
-	return uc.articleRepo.Create(article)
+	if err := uc.articleRepo.Create(article); err != nil {
+		return nil, err
+	}
+	
+	// GORM لا يقوم بتحميل المؤلف تلقائيًا بعد الإنشاء، لذلك نقوم بتعبئته يدويًا
+	article.Author = *author
+
+	return uc.mapArticleToResponse(article), nil
 }
 
 // GetAllArticles يجلب جميع المقالات
-// تستدعي هذه الدالة من طبقة المعالج (Handler) عندما يريد المستخدم عرض جميع المقالات
-func (uc *articleUseCase) GetAllArticles() ([]models.Article, error) {
-	//  يمكن إضافة منطق عمل إضافي مثل:
-	// - ترتيب المقالات حسب التاريخ
-	// - تصفية المقالات حسب حالة النشر
-	// - التحقق من صلاحيات المستخدم
+func (uc *articleUseCase) GetAllArticles() ([]dto.ArticleResponse, error) {
+	articles, err := uc.articleRepo.FindAll()
+	if err != nil {
+		return nil, err
+	}
 
-	// طلب جميع المقالات من طبقة المستودع (الطابق الثالث)
-	return uc.articleRepo.FindAll()
+	var responses []dto.ArticleResponse
+	for _, article := range articles {
+		responses = append(responses, *uc.mapArticleToResponse(&article))
+	}
+	return responses, nil
 }
 
-// GetArticleByID يجلب مقالًا واحدًا حسب ID
-// تستدعي هذه الدالة من طبقة المعالج (Handler) عندما يريد المستخدم عرض مقال محدد
-func (uc *articleUseCase) GetArticleByID(id uint) (*models.Article, error) {
-	// هنا يمكن إضافة منطق عمل إضافي مثل:
-	// - التحقق من صلاحيات المستخدم لعرض هذا المقال
-	// - تسجيل عملية الوصول للمقال في سجل الأحداث
-	// - زيادة عداد المشاهدات للمقال
-
-	// طلب المقال المحدد من طبقة المستودع (الطابق الثالث)
-	return uc.articleRepo.FindByID(id)
+// GetArticleByID يجلب مقالًا واحدًا
+func (uc *articleUseCase) GetArticleByID(id uint) (*dto.ArticleResponse, error) {
+	article, err := uc.articleRepo.FindByID(id)
+	if err != nil || article == nil {
+		return nil, err
+	}
+	return uc.mapArticleToResponse(article), nil
 }
 
-// UpdateArticle يقوم بتحديث مقال موجود
-// تستدعي هذه الدالة من طبقة المعالج (Handler) عندما يريد المستخدم تحديث مقال
-func (uc *articleUseCase) UpdateArticle(article *models.Article) error {
-	//  يمكن إضافة منطق عمل قبل التحديث مثل:
-	// - التحقق من صلاحيات المستخدم لتحديث المقال
-	// - التحقق من أن المقال موجود قبل التحديث
-	// - تحديث تاريخ التعديل تلقائياً
-	// - الاحتفاظ بنسخة من المقال القديم قبل التحديث
+// UpdateArticle يحدّث مقالًا
+func (uc *articleUseCase) UpdateArticle(id uint, req *dto.UpdateArticleRequest) (*dto.ArticleResponse, error) {
+	article, err := uc.articleRepo.FindByID(id)
+	if err != nil || article == nil {
+		return nil, err
+	}
 
-	// طلب تحديث المقال من طبقة المستودع (الطابق الثالث)
-	return uc.articleRepo.Update(article)
+	if req.Title != "" {
+		article.Title = req.Title
+	}
+	if req.Content != "" {
+		article.Content = req.Content
+	}
+
+	if err := uc.articleRepo.Update(article); err != nil {
+		return nil, err
+	}
+	return uc.mapArticleToResponse(article), nil
 }
 
-// DeleteArticle يقوم بحذف مقال
-// تستدعي هذه الدالة من طبقة المعالج (Handler) عندما يريد المستخدم حذف مقال
+// DeleteArticle يحذف مقالًا
 func (uc *articleUseCase) DeleteArticle(id uint) error {
-	//  يمكن إضافة منطق عمل قبل الحذف مثل:
-	// - التحقق من صلاحيات المستخدم لحذف المقال
-	// - التحقق من عدم وجود تعليقات أو إعجابات مرتبطة بالمقال
-	// - عمل أرشفة للمقال بدلاً من حذفه نهائياً
-	// - تسجيل عملية الحذف في سجل الأحداث
-
-	// طلب حذف المقال من طبقة المستودع (الطابق الثالث)
 	return uc.articleRepo.Delete(id)
+}
+
+// دالة مساعدة للتحويل لتقليل التكرار
+func (uc *articleUseCase) mapArticleToResponse(article *models.Article) *dto.ArticleResponse {
+	return &dto.ArticleResponse{
+		ID:        article.ID,
+		Title:     article.Title,
+		Content:   article.Content,
+		CreatedAt: article.CreatedAt,
+		UpdatedAt: article.UpdatedAt,
+		Author: dto.AuthorResponse{
+			ID:    article.Author.ID,
+			Name:  article.Author.Name,
+			Email: article.Author.Email,
+		},
+	}
 }

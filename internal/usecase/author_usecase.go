@@ -1,82 +1,122 @@
 // my-article-app/internal/usecase/author_usecase.go
 package usecase
 
-// استيراد المكتبات اللازمة للعمل
 import (
+	"my-article-app/internal/dto"
 	"my-article-app/internal/models"
 	"my-article-app/internal/repository"
 )
+
 type AuthorUseCase interface {
-	CreateAuthor(author *models.Author) error
-	GetAllAuthors() ([]models.Author, error)
-	GetAuthorByID(id uint) (*models.Author, error)
-	UpdateAuthor(author *models.Author) error
+	CreateAuthor(req *dto.CreateAuthorRequest) (*dto.AuthorResponse, error)
+	GetAllAuthors() ([]dto.AuthorResponse, error)
+	GetAuthorByID(id uint) (*dto.AuthorDetailResponse, error)
+	UpdateAuthor(id uint, req *dto.UpdateAuthorRequest) (*dto.AuthorResponse, error)
 	DeleteAuthor(id uint) error
 }
-// AuthorUseCase يمثل منطق العمل للمؤلفين
 
 type authorUseCase struct {
-	authorRepo repository.AuthorRepository // مرجع لمستودع المؤلفين (الطبقة الثالثة)
+	authorRepo repository.AuthorRepository
 }
 
-// NewAuthorUseCase ينشئ مثيلاً جديدًا من AuthorUseCase
-// هذه الدالة تُستخدم عند بدء التطبيق لربط طبقة منطق العمل (UseCase) بطبقة المستودع (Repository)
 func NewAuthorUseCase(authorRepo repository.AuthorRepository) AuthorUseCase {
-	// إنشاء وإرجاع كائن منطق العمل مع تمرير مرجع لمستودع المؤلفين
 	return &authorUseCase{authorRepo: authorRepo}
 }
 
-// CreateAuthor يقوم بإنشاء مؤلف جديد
-// هذه الدالة مسؤولة عن إنشاء سجل جديد للمؤلف في قاعدة البيانات
-func (uc *authorUseCase) CreateAuthor(author *models.Author) error {
-	// يمكن إضافة منطق عمل إضافي هنا قبل حفظ المؤلف
-	// مثال: التحقق من أن البريد الإلكتروني غير مستخدم بالفعل
-	// مثال: التحقق من صحة البيانات المدخلة
+// CreateAuthor ينشئ مؤلفًا جديدًا
+func (uc *authorUseCase) CreateAuthor(req *dto.CreateAuthorRequest) (*dto.AuthorResponse, error) {
+	author := &models.Author{
+		Name:  req.Name,
+		Email: req.Email,
+	}
 
-	// استدعاء طبقة المستودع لحفظ بيانات المؤلف في قاعدة البيانات
-	return uc.authorRepo.Create(author)
+	if err := uc.authorRepo.Create(author); err != nil {
+		return nil, err
+	}
+
+	response := &dto.AuthorResponse{
+		ID:    author.ID,
+		Name:  author.Name,
+		Email: author.Email,
+	}
+	return response, nil
 }
 
 // GetAllAuthors يجلب جميع المؤلفين
-// هذه الدالة مسؤولة عن استرجاع قائمة بجميع المؤلفين من قاعدة البيانات
-func (uc *authorUseCase) GetAllAuthors() ([]models.Author, error) {
-	// يمكن إضافة منطق عمل إضافي هنا
-	// مثال: تطبيق تصفية (filtering) على النتائج
-	// مثال: تطبيق ترتيب معين (sorting)
+func (uc *authorUseCase) GetAllAuthors() ([]dto.AuthorResponse, error) {
+	authors, err := uc.authorRepo.FindAll()
+	if err != nil {
+		return nil, err
+	}
 
-	// استدعاء طبقة المستودع لجلب جميع المؤلفين من قاعدة البيانات
-	return uc.authorRepo.FindAll()
+	var responses []dto.AuthorResponse
+	for _, author := range authors {
+		responses = append(responses, dto.AuthorResponse{
+			ID:    author.ID,
+			Name:  author.Name,
+			Email: author.Email,
+		})
+	}
+	return responses, nil
 }
 
-// GetAuthorByID يجلب مؤلفًا واحدًا حسب ID
-// هذه الدالة مسؤولة عن استرجاع مؤلف محدد من قاعدة البيانات باستخدام معرّفه الفريد
-func (uc *authorUseCase) GetAuthorByID(id uint) (*models.Author, error) {
-	// يمكن إضافة منطق عمل إضافي هنا
-	// مثال: التحقق من صلاحية المعرّف قبل البحث
+// GetAuthorByID يجلب مؤلفًا واحدًا مع مقالاته
+func (uc *authorUseCase) GetAuthorByID(id uint) (*dto.AuthorDetailResponse, error) {
+	author, err := uc.authorRepo.FindByID(id)
+	if err != nil || author == nil {
+		return nil, err
+	}
 
-	// استدعاء طبقة المستودع للبحث عن المؤلف بواسطة المعرّف
-	// سيتم إرجاع خطأ إذا لم يتم العثور على المؤلف
-	return uc.authorRepo.FindByID(id)
+	response := &dto.AuthorDetailResponse{
+		ID:        author.ID,
+		Name:      author.Name,
+		Email:     author.Email,
+		CreatedAt: author.CreatedAt,
+		Articles:  []dto.ArticleResponse{}, // Initialize to avoid null
+	}
+
+	for _, article := range author.Articles {
+		response.Articles = append(response.Articles, dto.ArticleResponse{
+			ID:        article.ID,
+			Title:     article.Title,
+			Content:   article.Content,
+			CreatedAt: article.CreatedAt,
+			UpdatedAt: article.UpdatedAt,
+			// Note: Author data is omitted here to avoid circular nesting
+		})
+	}
+
+	return response, nil
 }
 
-// UpdateAuthor يقوم بتحديث مؤلف موجود
-// هذه الدالة مسؤولة عن تحديث بيانات مؤلف موجود بالفعل في قاعدة البيانات
-func (uc *authorUseCase) UpdateAuthor(author *models.Author) error {
-	// يمكن إضافة منطق عمل إضافي هنا قبل تحديث المؤلف
-	// مثال: التحقق من صحة البيانات المحدثة
-	// مثال: التحقق من وجود المؤلف قبل محاولة التحديث
+// UpdateAuthor يحدّث بيانات المؤلف
+func (uc *authorUseCase) UpdateAuthor(id uint, req *dto.UpdateAuthorRequest) (*dto.AuthorResponse, error) {
+	author, err := uc.authorRepo.FindByID(id)
+	if err != nil || author == nil {
+		return nil, err
+	}
 
-	// استدعاء طبقة المستودع لتحديث بيانات المؤلف في قاعدة البيانات
-	return uc.authorRepo.Update(author)
+	if req.Name != "" {
+		author.Name = req.Name
+	}
+	if req.Email != "" {
+		author.Email = req.Email
+	}
+
+	if err := uc.authorRepo.Update(author); err != nil {
+		return nil, err
+	}
+
+	response := &dto.AuthorResponse{
+		ID:    author.ID,
+		Name:  author.Name,
+		Email: author.Email,
+	}
+	return response, nil
 }
 
-// DeleteAuthor يقوم بحذف مؤلف
-// هذه الدالة مسؤولة عن حذف مؤلف من قاعدة البيانات باستخدام معرّفه الفريد
+// DeleteAuthor يحذف المؤلف
 func (uc *authorUseCase) DeleteAuthor(id uint) error {
-	// يمكن إضافة منطق عمل إضافي هنا قبل حذف المؤلف
-	// مثال: التحقق مما إذا كان للمؤلف مقالات مرتبطة به قبل الحذف
-	// مثال: تطبيق قواعد العمل مثل حذف المقالات المرتبطة أو منع الحذف إذا كان هناك مقالات
-
-	// استدعاء طبقة المستودع لحذف المؤلف من قاعدة البيانات
+	// Optional: Add logic here to check if the author has articles before deleting.
 	return uc.authorRepo.Delete(id)
 }
