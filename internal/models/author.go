@@ -3,7 +3,7 @@ package models
 
 import (
 	
-	"gorm.io/gorm" // لاستيراد gorm.Model
+	"gorm.io/gorm" 
 )
 
 

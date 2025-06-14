@@ -4,7 +4,7 @@ package database
 import (
 	"fmt"
 	"log"
-	"my-article-app/internal/models" // استيراد بنية Article
+	"my-article-app/internal/models" 
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -13,7 +13,7 @@ import (
 // InitGORMDB تهيئ اتصال GORM بقاعدة بيانات PostgreSQL
 func InitGORMDB() (*gorm.DB, error) {
 	// هنا نضع سلسلة الاتصال مباشرةً (للتطبيق التعليمي فقط، في الإنتاج استخدم متغيرات البيئة)
-	dsn := "host=localhost user=postgres password=postgres dbname=article_db port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+	dsn := "host=localhost user=postgres password=311 dbname=article_db port=5432 sslmode=disable TimeZone=Asia/Shanghai"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("فشل الاتصال بقاعدة البيانات باستخدام GORM: %w", err)

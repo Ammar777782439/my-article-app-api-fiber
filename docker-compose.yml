@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    # Optional: Add persistence
+    # volumes:
+    #   - redis_data:/data
+
+  go_app:
+    build: . # Builds from a Dockerfile in the current directory
+    ports:
+      - "8080:8080" # Example port for your Go application
+    depends_on:
+      - redis # Ensures redis starts before go_app
+    environment:
+      REDIS_ADDR: redis:6379 # How your Go app will connect to Redis
+      # Add other environment variables as needed
+
+# Optional: Define volumes for persistence
+# volumes:
+#   redis_data:

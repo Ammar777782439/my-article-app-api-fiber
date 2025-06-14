@@ -6,13 +6,13 @@ import (
 	"my-article-app/internal/database"
 	"my-article-app/internal/handlers"
 	"my-article-app/internal/repository"
-	"my-article-app/internal/usecase" // استيراد UseCase
+	"my-article-app/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	// 1. تهيئة اتصال قاعدة البيانات باستخدام GORM
+	// 1. تهيئة اتصال قاعدة البيانات
 	db, err := database.InitGORMDB()
 	if err != nil {
 		log.Fatalf("فشل في تهيئة قاعدة البيانات: %v", err)
@@ -21,18 +21,18 @@ func main() {
 	// 2. تهيئة الـ Repositories (المستودعات)
 	articleRepo := repository.NewArticleRepository(db)
 	authorRepo := repository.NewAuthorRepository(db)
-
-	// 3. تهيئة الـ Use Cases (حالات الاستخدام) - جديد
+	// 3. تهيئة الـ Use Cases (حالات الاستخدام)
 	articleUseCase := usecase.NewArticleUseCase(articleRepo)
+
 	authorUseCase := usecase.NewAuthorUseCase(authorRepo)
 
 	// 4. تهيئة الـ Handlers (المعالجات) - استخدام Use Cases
-	articleHandler := handlers.NewArticleHandler(articleUseCase) 
-	authorHandler := handlers.NewAuthorHandler(authorUseCase)     
+	articleHandler := handlers.NewArticleHandler(articleUseCase)
+	authorHandler := handlers.NewAuthorHandler(authorUseCase)
 
 	app := fiber.New()
 
-	// 5. تعريف مسارات Fiber (Routes) 
+	// 5. تعريف مسارات Fiber (Routes)
 	api := app.Group("/api/v1")
 
 	articlesGroup := api.Group("/articles")
