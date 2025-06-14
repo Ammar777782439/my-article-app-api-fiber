@@ -20,17 +20,18 @@ The core functionalities of the system are delineated as follows:
 The project's structural design adheres to a multi-layered architectural pattern, implemented to enforce a strict separation of concerns, thereby enhancing modularity and long-term maintainability of the codebase.
 
 my-article-app/  
-├── cmd/api/main.go              \# Primary application entry point  
+├── cmd/api/main.go              \# نقطة الدخول الرئيسية للتطبيق  
 ├── internal/  
-│   ├── database/                \# Database connectivity configuration  
-│   ├── dto/                     \# Data Transfer Objects (DTOs) for API contracts  
-│   ├── handlers/                \# HTTP request handlers (interact with DTOs)  
-│   ├── models/                  \# GORM models (ORM representation of database tables)  
-│   ├── repository/              \# Data access and persistence layer (interacts with Models)  
-│   └── usecase/                 \# Business logic encapsulation layer  
+│   ├── database/                \# إعداد اتصال قاعدة البيانات  
+│   ├── dto/                     \# (DTOs) كائنات نقل البيانات للـ API  
+│   ├── handlers/                \# معالجات طلبات HTTP (تتعامل مع DTOs)  
+│   ├── models/                  \# نماذج GORM (تمثل جداول قاعدة البيانات)  
+│   ├── repository/              \# طبقة الوصول إلى البيانات (تتعامل مع Models)  
+│   └── usecase/                 \# طبقة منطق العمل (الجسر بين DTOs و Models)  
 ├── go.mod  
 ├── go.sum  
 └── docker-compose.yml
+
 
 ### **2.1. Request Processing Flow**
 
