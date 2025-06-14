@@ -4,7 +4,7 @@
 
 The my-article-app system constitutes a fully integrated web application, engineered utilizing the Go programming language to furnish a RESTful Application Programming Interface for the comprehensive management of articles and their respective authors. The implementation leverages the Fiber framework in conjunction with the GORM library for object-relational mapping to a PostgreSQL database, adhering to a paradigm of clean, scalable architecture predicated on the principle of separation of concerns.
 
-## **1\. System Capabilities**
+## **System Capabilities**
 
 The core functionalities of the system are delineated as follows:
 
@@ -20,20 +20,19 @@ The core functionalities of the system are delineated as follows:
 The project's structural design adheres to a multi-layered architectural pattern, implemented to enforce a strict separation of concerns, thereby enhancing modularity and long-term maintainability of the codebase.
 
 my-article-app/  
-├── cmd/api/main.go              \# نقطة الدخول الرئيسية للتطبيق  
+├── cmd/api/main.go              \# Primary application entry point  
 ├── internal/  
-│   ├── database/                \# إعداد اتصال قاعدة البيانات  
-│   ├── dto/                     \# (DTOs) كائنات نقل البيانات للـ API  
-│   ├── handlers/                \# معالجات طلبات HTTP (تتعامل مع DTOs)  
-│   ├── models/                  \# نماذج GORM (تمثل جداول قاعدة البيانات)  
-│   ├── repository/              \# طبقة الوصول إلى البيانات (تتعامل مع Models)  
-│   └── usecase/                 \# طبقة منطق العمل (الجسر بين DTOs و Models)  
+│   ├── database/                \# Database connectivity configuration  
+│   ├── dto/                     \# Data Transfer Objects (DTOs) for API contracts  
+│   ├── handlers/                \# HTTP request handlers (interact with DTOs)  
+│   ├── models/                  \# GORM models (ORM representation of database tables)  
+│   ├── repository/              \# Data access and persistence layer (interacts with Models)  
+│   └── usecase/                 \# Business logic encapsulation layer  
 ├── go.mod  
 ├── go.sum  
 └── docker-compose.yml
 
-
-### **2.1. Request Processing Flow**
+### **Request Processing Flow**
 
 The procedural sequence for request processing is delineated as follows:
 
@@ -56,9 +55,9 @@ The procedural sequence for request processing is delineated as follows:
 * **Data Validation Library:** go-playground/validator, version 10\.  
 * **Containerization Technology:** Docker & Docker Compose.
 
-## **4\. System Prerequisites and Configuration Protocol**
+## **System Prerequisites and Configuration Protocol**
 
-### **4.1. Prerequisites**
+### **Prerequisites**
 
 Prior to system initialization, the following software components must be installed and configured on the host machine:
 
@@ -66,7 +65,7 @@ Prior to system initialization, the following software components must be instal
 * Docker & Docker Compose: For containerized database deployment.  
 * Git: For version control and repository cloning.
 
-### **4.2. Configuration Steps**
+### **Configuration Steps**
 
 The protocol for system setup is as follows:
 
@@ -87,11 +86,11 @@ The protocol for system setup is as follows:
 
    Upon successful startup, a confirmation message will be logged, indicating that the server is listening for connections on port 3000\.
 
-## **5\. Application Programming Interface (API) Endpoints**
+## **Application Programming Interface (API) Endpoints**
 
 The API employs Data Transfer Objects (DTOs) for both inbound requests and outbound responses to ensure security, abstraction, and clarity in data contracts.
 
-### **5.1. Author Endpoints**
+### **Author Endpoints**
 
 | Method | Path | Description | Request Body (Example) | Successful Response (Example) |
 | ----: | ----: | ----: | ----: | ----: |
@@ -101,7 +100,7 @@ The API employs Data Transfer Objects (DTOs) for both inbound requests and outbo
 | PUT | /api/v1/authors/{id} | Updates an existing author entity. | {"name": "Ahmed New"} | 200 OK with AuthorResponse |
 | DELETE | /api/v1/authors/{id} | Deletes an author entity. | (None) | 204 No Content |
 
-### **5.2. Article Endpoints**
+### **Article Endpoints**
 
 | Method | Path | Description | Request Body (Example) | Successful Response (Example) |
 | ----: | ----: | ----: | ----: | ----: |
@@ -111,7 +110,7 @@ The API employs Data Transfer Objects (DTOs) for both inbound requests and outbo
 | PUT | /api/v1/articles/{id} | Updates an existing article entity. | {"title": "Updated Title"} | 200 OK with ArticleResponse |
 | DELETE | /api/v1/articles/{id} | Deletes an article entity. | (None) | 204 No Content |
 
-## **6\. Exemplary cURL Invocations for Endpoint Verification**
+## **Exemplary cURL Invocations for Endpoint Verification**
 
 1. **Author Creation:**  
    curl \-X POST \-H "Content-Type: application/json" \\  
@@ -129,7 +128,7 @@ The API employs Data Transfer Objects (DTOs) for both inbound requests and outbo
 4. **Author Retrieval:** (Note the embedded article data in the response)  
    curl http://localhost:3000/api/v1/authors/1
 
-## **7\. Recommendations for Future System Enhancements**
+## **Recommendations for Future System Enhancements**
 
 It is posited that future development iterations could benefit from the incorporation of the following enhancements:
 
